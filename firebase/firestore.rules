@@ -1,0 +1,291 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+  // allow aaron to do anything
+  	// match /{document=**} {
+  	// 	allow read, write: if
+  	// 		tokenEmail() == "agourdin@gmail.com"
+  	// }
+  
+  
+  // FIELD PATH NAMES
+
+    function nameFieldPath()              { return 'name'               }
+    function iconFieldPath()              { return 'icon'               }
+    function groupsFieldPath()            { return 'groups'             }
+    function expoPushTokenFieldPath()     { return 'expoPushToken'      }
+    function membersFieldPath()           { return 'members'            }
+    function downFieldPath()              { return 'down'               }
+    function chatFieldPath()              { return 'chat'               }
+    function messageFieldPath()           { return 'message'            }
+    function lastMessageFieldPath()       { return 'lastMessage'        }
+    function contentFieldPath()           { return 'content'            }
+    function textFieldPath()              { return 'text'               }
+    function seenByFieldPath()            { return 'seenBy'             }
+    function messagesFieldPath()          { return 'messages'           }
+    function timestampFieldPath()         { return 'timestamp'          }
+    function invitesFieldPath()           { return 'invites'            }
+    function invitedByFieldPath()         { return 'invitedBy'          }
+    function statusFieldPath()            { return 'status'             }
+  
+  // GENERAL FUNCTIONS
+
+    // [AUTH] request.auth and basic users functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function userId() {
+      return request.auth.uid;
+    }
+    function tokenEmail() {
+      return request.auth.token.email;
+    }
+
+    // [MAP] map helper functions
+    function keysHaveNone(_map) {
+      return _map.keys().size() == 0
+    }
+    function keysHaveAll(_map, list) {
+      return _map.keys().hasAll(list)
+    }
+    function keysHaveOnly(_map, list) {
+      return _map.keys().hasOnly(list)
+    }
+    function affectedKeysUnchanged(_map1, _map2) {
+      return _map1.diff(_map2).affectedKeys().size() == 0
+    }
+    function affectedKeysHaveAny(_map1, _map2, _list) {
+      return _map1.diff(_map2).affectedKeys().hasAny(_list)
+    }
+    function affectedKeysHaveOnly(_map1, _map2, _list) {
+      return _map1.diff(_map2).affectedKeys().hasOnly(_list)
+    }
+    function affectedKeysHaveAnyOrNone(_map1, _map2, _list) {
+      return affectedKeysHaveAny(_map1, _map2, _list) || affectedKeysUnchanged(_map1, _map2)
+    }
+    // [TIMESTAMP]
+    function validTimestamp() {
+      return timestamp.date(1992,4,20)
+    }
+    // [READ] data that exists on a firestore document
+    function existingData() {
+      return resource.data;
+    }
+    function existingDataField(field) {
+      return existingData()[field]
+    }
+    // [WRITE] data that is sent to a firestore document
+    function requestTime() {
+      return request.time
+    }
+    function incomingData() {
+      return request.resource.data;
+    }
+    function incomingDataField(field) {
+      return incomingData()[field]
+    }
+    function incomingDataIsEmpty() {
+      return keysHaveNone(incomingData());
+    }
+
+
+
+  // VALIDATION FUNCTIONS
+    function hasValidUid(uid) {
+      return
+        uid is string
+        && uid == userId()
+    }
+    function userIsAccessingOwnResourceById(userId) {
+      return 
+      	isSignedIn() && userId() == userId
+    }
+    function userIsAccessingOwnResourceByEmail(email) {
+      return 
+      	isSignedIn() && tokenEmail() == email
+    }
+    function isGroupMember(groupId) {
+      return 
+        isSignedIn()
+        && userId() in get(/databases/$(database)/documents/$(groupsFieldPath())/$(groupId)).data[membersFieldPath()].keys()
+    }
+    function hasInviteToGroup(groupId) {
+      return
+        isSignedIn()
+        && exists(/databases/$(database)/documents/$(invitesFieldPath())/$(tokenEmail())/$(groupsFieldPath())/$(groupId))
+    }
+    function doesNotHaveNoNoWords(str) {
+      return 
+        str.lower().matches('((c|k|ck|q)un[t\\+][s\\$]?)|([ck]+[i]+[ck]+[e3]+)|((c|k|ck|q)un[t\\+][l1][i1](c|k|ck|q))|((c|k|ck|q)un[t\\+][l1][i1](c|k|ck|q)[e3]r)|((c|k|ck|q)un[t\\+][l1][i1](c|k|ck|q)[i1]ng)|((ph|f)[a@]g[s\\$]?)|((ph|f)[a@]gg[i1]ng)|((ph|f)[a@]gg?[o0][t\\+][s\\$]?)|((ph|f)[a@]gg[s\\$])|(h[o0]m?m[o0])|(n[i1]gg?[e3]r[s\\$]?)|(pu[s\\$][s\\$][i1][e3][s\\$])|(pu[s\\$][s\\$]y[s\\$]?)|([s\\$][l1]u[t\\+][s\\$]?)|([t\\+]w[a@][t\\+][s\\$]?)') == false;
+    }
+    function hasValidNameLength(name) {
+      return
+        name.size() >= 3
+        && name.size() <= 25
+    }
+    function hasValidName(name) {
+      return
+        name is string
+        && hasValidNameLength(name)
+        && doesNotHaveNoNoWords(name)
+    }
+    function hasValidMessageText(text) {
+      return
+        text is string
+        && text.size() <= 500
+        && doesNotHaveNoNoWords(text)
+    }
+    function hasValidCreateMailData() {
+    	return 
+        incomingData().keys().hasOnly(['to', messageFieldPath()])
+        && incomingData().to is list
+        && incomingData().to.size() >= 1
+        && incomingData().message is map
+        && incomingData().message.html is string
+        && doesNotHaveNoNoWords(incomingData().message.html)
+        && incomingData().message.text is string
+        && doesNotHaveNoNoWords(incomingData().message.text)
+        && incomingData().message.subject is string
+        && doesNotHaveNoNoWords(incomingData().message.subject)
+    }
+
+
+    match /users/{userId} {
+
+      allow create: if 
+        userIsAccessingOwnResourceById(userId)
+        && keysHaveOnly(incomingData(), [nameFieldPath(), iconFieldPath()])
+        && hasValidName(incomingData().get(nameFieldPath(), 'good name'))
+
+      allow read: if
+      	isSignedIn();
+      
+      allow update: if
+      	userIsAccessingOwnResourceById(userId)
+        && affectedKeysHaveAnyOrNone(incomingData(), existingData(), [nameFieldPath(), iconFieldPath()])
+        && hasValidName(incomingData().get(nameFieldPath(), 'good name'))
+
+      allow delete: if
+        false;
+
+
+      match /private {
+
+        allow create: if
+          userIsAccessingOwnResourceById(userId)
+
+        allow delete: if
+          false;
+        
+
+        match /{document=**} {
+
+          allow read: if
+            userIsAccessingOwnResourceById(userId) 
+
+        }
+        
+
+        match /data {
+          
+          allow create: if
+            userIsAccessingOwnResourceById(userId) &&
+            keysHaveOnly(incomingData(), [groupsFieldPath(), expoPushTokenFieldPath()]) &&
+            incomingData().get(groupsFieldPath(), []) is list &&
+            incomingData().get(expoPushTokenFieldPath(), 'string') is string
+
+
+          allow update: if
+            userIsAccessingOwnResourceById(userId) &&
+            affectedKeysHaveAnyOrNone(incomingData(), existingData(), [groupsFieldPath(), expoPushTokenFieldPath()]) &&
+            incomingData().get(groupsFieldPath(), []) is list &&
+            incomingData().get(expoPushTokenFieldPath(), 'string') is string
+
+          allow delete: if
+            false;
+
+        }
+      }
+    }
+    
+
+    match /groups/{groupId} {
+      
+    	allow create: if
+      	isSignedIn() &&
+        keysHaveAll(incomingData(), [membersFieldPath(), nameFieldPath(), iconFieldPath()]) &&
+        hasValidName(incomingData()[nameFieldPath()]) &&
+        incomingData()[membersFieldPath()] is map &&
+        keysHaveOnly(incomingData()[membersFieldPath()], [userId()]) 
+
+      allow read: if
+      	isGroupMember(groupId)
+        || hasInviteToGroup(groupId);
+
+      allow update: if
+      	( 
+      	isGroupMember(groupId) ||
+      	hasInviteToGroup(groupId) 
+      	) &&
+        hasValidName(incomingData().get(nameFieldPath(), 'good name')) && 
+        incomingData().get(chatFieldPath(), {}) is map &&
+        incomingData().get(membersFieldPath(), {}) is map &&
+        affectedKeysHaveOnly(
+          incomingData().get(membersFieldPath(), {}), existingData().get(membersFieldPath(), {}),
+          [userId()]
+        )
+
+      allow delete: if
+        false;
+
+    }
+	
+
+    match /mail/{document} {
+
+      allow create: if
+        isSignedIn()
+				&& hasValidCreateMailData()
+
+    }
+
+
+    match /invites/{email} {
+
+      allow create: if
+        isSignedIn() 
+        && incomingDataIsEmpty()
+
+			allow read: if
+      	isSignedIn() 
+        
+        
+      match /groups/{groupId} {
+      
+      	allow create: if
+        	isSignedIn()
+          && isGroupMember(groupId)
+          && keysHaveOnly(incomingData(), [invitedByFieldPath(), statusFieldPath()])
+          && incomingData()[invitedByFieldPath()] == userId()
+          && incomingData()[statusFieldPath()] == 'pending'
+          
+        allow read: if
+        	isSignedIn()
+          
+      	allow update: if
+        	userIsAccessingOwnResourceByEmail(email)
+          && affectedKeysHaveAnyOrNone(incomingData(), existingData(), [statusFieldPath()])
+          && incomingData().get(statusFieldPath(), 'accepted') in ['accepted', 'blocked', 'ignored']
+
+        allow delete: if
+          userIsAccessingOwnResourceByEmail(email)
+      
+      }
+      
+    }
+
+// MAIN TERMINATING BRACKETS DO NOT DELETE /////////////////////////////////////////////////////////////
+	}
+}
+// MAIN TERMINATING BRACKETS DO NOT DELETE /////////////////////////////////////////////////////////////
