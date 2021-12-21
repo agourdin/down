@@ -38,7 +38,7 @@ import { LandingScreenContainer } from "../styles/screens/screen.styles";
 export function InviteToAppModal({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, "InviteToApp">): JSX.Element {
-  const { email, setEmail, errors, success, handleSubmit } = useInvite();
+  const { email, setEmail, errors, success, handleSubmit } = useInvite({});
 
   return (
     <LinearGradientBackground colors={[colors.yellow, colors.orange]}>
