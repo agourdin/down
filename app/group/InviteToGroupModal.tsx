@@ -53,10 +53,10 @@ export function InviteToGroupModal({
           <FlowFieldContainer>
             <FieldLabel>just enter their email:</FieldLabel>
             <DefaultTextInputContainer
-              value={email}
+              value={email.toLowerCase()}
               keyboardType='email-address'
               placeholder='enter an email'
-              onChangeText={setEmail}
+              onChangeText={(text) => setEmail(text.toLowerCase())}
             />
             {errors ? <FieldErrors>{errors}</FieldErrors> : null}
             {success ? <FieldSubLabel>{success}</FieldSubLabel> : null}
