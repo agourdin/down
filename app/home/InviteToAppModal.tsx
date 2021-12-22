@@ -52,8 +52,8 @@ export function InviteToAppModal({
             <FieldDescription></FieldDescription>
             <DefaultTextInputContainer
               keyboardType='email-address'
-              value={email}
-              onChangeText={setEmail}
+              value={email.toLowerCase()}
+              onChangeText={(text) => setEmail(text.toLowerCase())}
               placeholder='enter email'
             />
             {errors ? <FieldErrors>{errors}</FieldErrors> : null}

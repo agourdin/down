@@ -71,6 +71,7 @@ export const useInvite = ({ gid, uid }: { gid?: string; uid?: string }) => {
   const handleSubmit = async () => {
     try {
       if (validEmails(email, email, auth)) {
+        console.log("gid: ", gid, "uid: ", uid);
         if (gid && uid) {
           if (await createGroupInviteDoc(db, email, gid, newGroupInvite(uid))) {
             setSuccess("");
