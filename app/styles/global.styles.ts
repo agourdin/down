@@ -1,16 +1,3 @@
-import { createGlobalStyle } from "styled-components";
-
-/* Types */
-type Theme = {
-  theme: {
-    colors: {
-      main: string;
-      bodyBackgroundDefault: string;
-      bodyBackground: string;
-    };
-  };
-};
-
 /* Global colors */
 export const colors: { [index: string]: any } = {
   darkGrey: "#33312E",

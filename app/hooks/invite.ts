@@ -91,8 +91,9 @@ export const useInvite = ({ gid, uid }: { gid?: string; uid?: string }) => {
   };
 
   useEffect(() => {
-    // clear errors when email changes
+    // clear messages when email changes
     setErrors("");
+    setSuccess("");
   }, [email]);
 
   return {

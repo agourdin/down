@@ -38,10 +38,10 @@ export function InviteToGroupModal({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, "InviteToGroup">): JSX.Element {
   const { gid, uid } = route.params;
-  const { email, setEmail, errors, success, handleSubmit } = useInvite(
+  const { email, setEmail, errors, success, handleSubmit } = useInvite({
     gid,
-    uid
-  );
+    uid,
+  });
   return (
     <LinearGradientBackground colors={[colors.yellow, colors.orange]}>
       <LandingScreenContainer>

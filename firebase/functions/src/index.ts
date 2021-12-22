@@ -118,8 +118,7 @@ exports.createMailDocForNewInvitee = functions.firestore
                 subject: "you've been invited to join down!",
                 text: `
             hi there! 👋 \n someone you know has invited you to join down, the app that encourages
-            spontaneous hangouts with friends! you can download the app and create a free
-            account here: https://getthedownapp.com \n
+            spontaneous hangouts with friends! you can download the app here: https://getthedown.app \n
             \n
             (if you aren't interested, feel free to delete this message.)\n
             \n
@@ -128,8 +127,7 @@ exports.createMailDocForNewInvitee = functions.firestore
             `,
                 html: `
             hi there! 👋 \n someone you know has invited you to join down, the app that encourages
-            spontaneous hangouts with friends! you can download the app and create a free
-            account here: https://getthedownapp.com \n
+            spontaneous hangouts with friends! you can download the app here: https://getthedown.app \n
             \n
             (if you aren't interested, feel free to delete this message.)\n
             \n
