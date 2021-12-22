@@ -75,7 +75,7 @@ export const FieldErrors = styled.Text`
 export const FieldSuccess = styled.Text`
   text-align: center;
   font-size: 16px;
-  color: ${colors.green};
+  color: ${colors.white};
   font-family: "MediumItalic";
   margin-bottom: 6px;
 `;
