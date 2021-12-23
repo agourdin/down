@@ -160,11 +160,20 @@ describe("tests: groups.ts", () => {
             test("should add uid as a key to members map with default new member data (down: false)", async () => {
               await testEnv.withSecurityRulesDisabled(async (context) => {
                 let db = context.firestore();
-                await updateMember(db, uid, gid, "join");
+                await updateMember(db, uid, gid, "join", {
+                  name: USERS.ALICE.name,
+                  icon: USERS.ALICE.icon,
+                });
                 const newGroupDocData = (
                   await getDoc(getGroupDocRef(db, gid))
                 ).data();
                 expect(newGroupDocData?.members).toHaveProperty(uid);
+                expect(newGroupDocData?.members[uid].name).toBe(
+                  USERS.ALICE.name
+                );
+                expect(newGroupDocData?.members[uid].icon).toBe(
+                  USERS.ALICE.icon
+                );
               });
             });
           });
@@ -296,10 +305,15 @@ describe("tests: groups.ts", () => {
               groups: ["aDifferentGroup123"],
               expoPushToken: "expotoken123",
             });
-            await handleGroupMembershipUpdate(db, uid, gid, "join");
+            await handleGroupMembershipUpdate(db, uid, gid, "join", {
+              name: USERS.ALICE.name,
+              icon: USERS.ALICE.icon,
+            });
             let privateDataDoc = await getDoc(getPrivateDataDocRef(db, uid));
             let newGroupDoc = await getDoc(getGroupDocRef(db, gid));
-            expect(newGroupDoc.data()?.members[uid]).toMatchObject(newMember());
+            expect(newGroupDoc.data()?.members[uid]).toMatchObject(
+              newMember(USERS.ALICE.name, USERS.ALICE.icon)
+            );
             expect(
               privateDataDoc.data()?.groups.indexOf(gid)
             ).toBeGreaterThanOrEqual(0);

@@ -20,6 +20,7 @@ import {
   DownErrorMessages,
 } from "../../utils/errors";
 import { validEmails } from "../../utils/validators";
+import { useUser } from "./user";
 
 /**
  * hook for accessing a user's group invites.
@@ -115,6 +116,7 @@ export const useInvite = ({ gid, uid }: { gid?: string; uid?: string }) => {
  */
 export const useActiveInvite = ({ uid, gid }: { uid: string; gid: string }) => {
   const email = getUserEmail();
+  const { name, icon } = useUser(uid);
   const [accepted, setAccepted] = useState(false);
   const [ignored, setIgnored] = useState(false);
   const navigation =
@@ -128,7 +130,10 @@ export const useActiveInvite = ({ uid, gid }: { uid: string; gid: string }) => {
     await updateGroupInviteDoc(db, email, gid, action);
     if (action === "accepted") {
       // handle joining user to group
-      await handleGroupMembershipUpdate(db, uid, gid, "join");
+      await handleGroupMembershipUpdate(db, uid, gid, "join", {
+        name,
+        icon,
+      });
     }
 
     const timer = setTimeout(() => {

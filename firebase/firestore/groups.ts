@@ -127,10 +127,10 @@ export const setGroupDoc = async (
 /**
  * @returns a new, blank {@link Member} object.
  */
-export const newMember = (): Member => {
+export const newMember = (name?: string, icon?: string): Member => {
   return {
-    name: "",
-    icon: "",
+    name: name ?? "",
+    icon: icon ?? "",
     expoPushToken: "",
     down: false,
   };
@@ -172,7 +172,7 @@ export const updateMember = async (
     let memberFieldPath;
     let memberData;
     memberFieldPath = nestedFieldPath([FIRESTORE.PATHS.MEMBERS, uid]);
-    if (flag === "join") memberData = newMember();
+    if (flag === "join") memberData = newMember(data?.name, data?.icon);
     if (flag === "exit") memberData = deleteField();
     data = { [memberFieldPath]: memberData };
   }
@@ -379,10 +379,11 @@ export const handleGroupMembershipUpdate = async (
   db: Firestore | any,
   uid: string,
   gid: string,
-  action: MembershipAction
+  action: MembershipAction,
+  data?: { name?: string; icon?: string }
 ) => {
   // add/remove the user to the group's members map
-  await updateMember(db, uid, gid, action);
+  await updateMember(db, uid, gid, action, data);
   // add/remove the group id to the user's private groups list
   return await updatePrivateGroups(db, uid, gid, action);
 };
