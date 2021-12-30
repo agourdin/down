@@ -1,5 +1,5 @@
 import { doc, Firestore, setDoc } from "@firebase/firestore";
-import { arrayRemove, arrayUnion, updateDoc } from "firebase/firestore";
+import { arrayRemove, arrayUnion, getDoc, updateDoc } from "firebase/firestore";
 import { FIRESTORE } from "./constants";
 
 /*******************************************************************************************************
@@ -79,9 +79,13 @@ export const updatePrivateGroups = async (
   action: MembershipAction
 ) => {
   let ref = getPrivateDataDocRef(db, uid);
+  let privateDataDoc = await getDoc(ref);
   let groups = arrayUnion("");
   if (action === "join") groups = arrayUnion(gid);
   if (action === "exit") groups = arrayRemove(gid);
+  if (!privateDataDoc.exists()) {
+    return setDoc(ref, { groups: groups });
+  }
   return await updateDoc(ref, "groups", groups);
 };
 
