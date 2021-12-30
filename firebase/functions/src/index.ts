@@ -6,6 +6,29 @@ import { deleteOldMessages } from "./utils";
 const app = admin.initializeApp();
 
 /**
+ * performs operations when a new user is created.
+ */
+exports.onCreateUser = functions.firestore
+  .document("users/{uid}")
+  .onCreate((snapshot, context) => {
+    const uid = context.params.uid;
+    admin
+      .firestore(app)
+      .doc("users/" + uid + "/private/data")
+      .create({ expoPushToken: "", groups: [] })
+      .then(() => {
+        return functions.logger.log(
+          `new private data doc created for user ${uid}!`
+        );
+      })
+      .catch((reason: any) => {
+        return functions.logger.error(
+          `failed to create new private data doc for user ${uid} for reason: ${reason}`
+        );
+      });
+  });
+
+/**
  * performs operations on an updated group document.
  */
 exports.onGroupUpdate = functions.firestore
@@ -24,7 +47,7 @@ exports.onGroupUpdate = functions.firestore
         return functions.logger.log(`old chats deleted from group: ${gid}!`);
       })
       .catch(() => {
-        return functions.logger.log(
+        return functions.logger.error(
           `something went wrong trying to delete old chats from group: ${gid}`
         );
       });
@@ -53,7 +76,7 @@ exports.sendGroupInviteNotification = functions.firestore
               .then((privateDataDoc) => {
                 const pushToken = privateDataDoc.data()?.expoPushToken;
                 if (!Expo.isExpoPushToken(pushToken))
-                  return functions.logger.log(
+                  return functions.logger.error(
                     `something went wrong trying to send group invite notification from ${inviterId} to ${uid} to join ${gid} -- push token not valid: ${pushToken}!`
                   );
                 admin
@@ -73,31 +96,31 @@ exports.sendGroupInviteNotification = functions.firestore
                         );
                       })
                       .catch((reason: any) => {
-                        return functions.logger.log(
+                        return functions.logger.error(
                           `something went wrong trying to send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
                         );
                       });
                   })
                   .catch((reason: any) => {
-                    return functions.logger.log(
+                    return functions.logger.error(
                       `something went wrong trying to send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
                     );
                   });
               })
               .catch((reason: any) => {
-                return functions.logger.log(
+                return functions.logger.error(
                   `something went wrong trying to send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
                 );
               });
           })
           .catch((reason: any) => {
-            return functions.logger.log(
+            return functions.logger.error(
               `something went wrong trying to send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
             );
           });
       })
       .catch((reason: any) => {
-        return functions.logger.log(
+        return functions.logger.error(
           `something went wrong trying to send group invite notification from ${inviterId} to ${email} to join ${gid} -- reason: no user for email ${email} exists!`
         );
       });
@@ -153,7 +176,7 @@ exports.createMailDocForNewInvitee = functions.firestore
               );
             })
             .catch(() => {
-              return functions.logger.log(
+              return functions.logger.error(
                 `something went wrong trying to create the mail document :(`
               );
             });
