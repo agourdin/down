@@ -31,63 +31,74 @@ exports.onGroupUpdate = functions.firestore
   });
 
 exports.sendGroupInviteNotification = functions.firestore
-  .document("invites/{uid}/groups/{gid}")
+  .document("invites/{email}/groups/{gid}")
   .onCreate((snapshot, context) => {
-    const { gid, uid } = context.params;
+    const { gid, email } = context.params;
     const inviterId = snapshot.data().invitedBy;
     admin
-      .firestore(app)
-      .doc("users/" + inviterId)
-      .get()
-      .then((inviterUserDoc) => {
-        const inviterName = inviterUserDoc.data()?.name;
+      .auth()
+      .getUserByEmail(email)
+      .then((user) => {
+        const uid = user.uid;
         admin
           .firestore(app)
-          .doc("users/" + uid + "/private/data")
+          .doc("users/" + inviterId)
           .get()
-          .then((privateDataDoc) => {
-            const pushToken = privateDataDoc.data()?.expoPushToken;
-            if (!Expo.isExpoPushToken(pushToken))
-              return functions.logger.log(
-                `something went wrong trying send group invite notification from ${inviterId} to ${uid} to join ${gid} -- push token not valid: ${pushToken}!`
-              );
+          .then((inviterUserDoc) => {
+            const inviterName = inviterUserDoc.data()?.name;
             admin
               .firestore(app)
-              .doc("groups/" + gid)
+              .doc("users/" + uid + "/private/data")
               .get()
-              .then((groupDoc) => {
-                const groupName = groupDoc.data()?.name;
-                const body = `${inviterName} invited you to join ${groupName}!`;
-                const data: { type: keyof InviteNotificationTypes } = {
-                  type: "invited-to-group",
-                };
-                sendIndividualNotification(pushToken, "default", body, data)
-                  .then(() => {
-                    return functions.logger.log(
-                      `group invite notification sent from ${inviterId} to ${uid} to join ${gid}!`
-                    );
+              .then((privateDataDoc) => {
+                const pushToken = privateDataDoc.data()?.expoPushToken;
+                if (!Expo.isExpoPushToken(pushToken))
+                  return functions.logger.log(
+                    `something went wrong trying to send group invite notification from ${inviterId} to ${uid} to join ${gid} -- push token not valid: ${pushToken}!`
+                  );
+                admin
+                  .firestore(app)
+                  .doc("groups/" + gid)
+                  .get()
+                  .then((groupDoc) => {
+                    const groupName = groupDoc.data()?.name;
+                    const body = `${inviterName} invited you to join ${groupName}!`;
+                    const data: { type: keyof InviteNotificationTypes } = {
+                      type: "invited-to-group",
+                    };
+                    sendIndividualNotification(pushToken, "default", body, data)
+                      .then(() => {
+                        return functions.logger.log(
+                          `group invite notification sent from ${inviterId} to ${uid} to join ${gid}!`
+                        );
+                      })
+                      .catch((reason: any) => {
+                        return functions.logger.log(
+                          `something went wrong trying to send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
+                        );
+                      });
                   })
                   .catch((reason: any) => {
                     return functions.logger.log(
-                      `something went wrong trying send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
+                      `something went wrong trying to send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
                     );
                   });
               })
               .catch((reason: any) => {
                 return functions.logger.log(
-                  `something went wrong trying send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
+                  `something went wrong trying to send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
                 );
               });
           })
           .catch((reason: any) => {
             return functions.logger.log(
-              `something went wrong trying send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
+              `something went wrong trying to send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
             );
           });
       })
       .catch((reason: any) => {
         return functions.logger.log(
-          `something went wrong trying send group invite notification from ${inviterId} to ${uid} to join ${gid} -- reason: ${reason}!`
+          `something went wrong trying to send group invite notification from ${inviterId} to ${email} to join ${gid} -- reason: no user for email ${email} exists!`
         );
       });
   });
