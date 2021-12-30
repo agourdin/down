@@ -190,10 +190,7 @@ service cloud.firestore {
         match /data {
           
           allow create: if
-            userIsAccessingOwnResourceById(userId) &&
-            keysHaveOnly(incomingData(), [groupsFieldPath(), expoPushTokenFieldPath()]) &&
-            incomingData().get(groupsFieldPath(), []) is list &&
-            incomingData().get(expoPushTokenFieldPath(), 'string') is string
+            userIsAccessingOwnResourceById(userId)
 
 
           allow update: if
